@@ -20,7 +20,7 @@ class App extends React.Component {
 
     this.startEdit = this.startEdit.bind(this);
     this.deleteItem = this.deleteItem.bind(this);
-    // this.strikeUnstrike = this.strikeUnstrike.bind(this);
+    this.strikeUnstrike = this.strikeUnstrike.bind(this);
   }
 
   getCookie(name) {
@@ -58,8 +58,8 @@ class App extends React.Component {
   handleChange(e) {
     var name = e.target.name;
     var value = e.target.value;
-    console.log("Name:", name);
-    console.log("Value:", value);
+    // console.log("Name:", name);
+    // console.log("Value:", value);
 
     this.setState({
       activeItem: {
@@ -77,7 +77,7 @@ class App extends React.Component {
 
     var url = "http://127.0.0.1:8000/api/task-create/";
 
-    if (this.state.editing == true) {
+    if (this.state.editing === true) {
       url = `http://127.0.0.1:8000/api/task-update/${this.state.activeItem.id}/`;
       this.setState({
         editing: false,
@@ -128,17 +128,40 @@ class App extends React.Component {
       this.fetchTasks();
     });
   }
+
+  
+  strikeUnstrike(task){
+
+    task.completed = !task.completed
+    var csrftoken = this.getCookie('csrftoken')
+    var url = `http://127.0.0.1:8000/api/task-update/${task.id}/`
+
+      fetch(url, {
+        method:'POST',
+        headers:{
+          'Content-type':'application/json',
+          'X-CSRFToken':csrftoken,
+        },
+        body:JSON.stringify({'completed': task.completed, 'title':task.title})
+      }).then(() => {
+        this.fetchTasks()
+      })
+
+    console.log('TASK:', task.completed)
+  }
+
   render() {
     var tasks = this.state.todoList;
     var self = this;
 
     return (
       <div className="container">
+        <h1>Todo List</h1>
         <div id="task-container">
           <div id="form-wrapper">
             <form id="form" onSubmit={this.handleSubmit}>
               <div className="flex-wrapper">
-                <div>
+                <div className="input">
                   <input
                     onChange={this.handleChange}
                     className="form-control"
@@ -149,7 +172,7 @@ class App extends React.Component {
                     placeholder="Enter the task"
                   />
 
-                  <button type="submit" className="submit">
+                  <button style={{fontSize: 34}} type="submit" className="btn submit">
                     +
                   </button>
                 </div>
@@ -161,26 +184,44 @@ class App extends React.Component {
             {tasks.map(function (task, index) {
               return (
                 <div
+                  
                   key={index}
-                  className="task-wrapper"
-                  style={{ display: "flex" }}
+                  className="task-wrapper">
+                  
+                  {/* // style={{ display: "flex", }}
+                  // >
+                  //   {task.completed ===false? (
+                  //   <span>{task.title}</span>
+                  // ) : (
+                  //   <strike>{task.title}</strike>
+                  // )} */}
+                  <li
+                  style={{textDecoration: task.completed ? "line-through" : "none", opacity: task.completed ? 0.5 : 1}}
+                >{task.title}</li>
+                <button
+                  onClick={() => self.strikeUnstrike(task)}
+                  className="btn complete-btn"
                 >
-                  <span>{task.title}</span>
-
+                  COMPLETE
+                </button>
+                  {/* {task.completed === true ? (
+                    <span>{task.title}</span>
+                  ) : (
+                    <strike>{task.title}</strike>
+                  )} */}
                   <div>
-                    <button className="complete">COMPLETE</button>
                   </div>
                   <div>
                     <button
                       onClick={() => self.startEdit(task)}
-                      className="edit"
+                      className="btn edit"
                     >
                       EDIT
                     </button>
                   </div>
-
                   <div>
-                    <button onClick={self.deleteItem(task)} className="delete">
+                    <button 
+                    onClick={() => self.deleteItem(task)} className="btn delete-btn">
                       DELETE
                     </button>
                   </div>
